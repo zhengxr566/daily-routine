@@ -138,6 +138,9 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
 .lib-item .acts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
 .mini{border:0;border-radius:9px;padding:6px 12px;font:500 14px var(--f-body);cursor:pointer;background:var(--accent);color:var(--surface)}
 .tag{font-size:12px;padding:4px 10px;border-radius:9px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.steps{margin:0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.steps li{display:list-item;padding:0;border:0;min-height:0}
+.steps a{color:var(--accent);font-weight:500}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;z-index:30;max-width:calc(100% - 32px);text-align:center}
 @media (max-width:360px){.pick h1{font-size:22px}.dial{width:72px;height:72px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -167,7 +170,7 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
   <div class="stats"><span>连续全勤 <b id="streak">0</b> 天</span><span id="rateLabel">这 7 天完成率 <b id="rate7">0%</b></span></div>
   <div class="remind" id="remind" hidden><span id="remindText"></span><button class="mini" type="button" id="remindBtn">去备份</button></div>
   <div id="lists"></div>
-  <p class="note"><span id="saveNote">数据只保存在这台设备的浏览器里</span> · <button class="link" id="bkBtn" type="button">备份与恢复</button></p>
+  <p class="note"><span id="saveNote">数据只保存在这台设备的浏览器里</span><br><button class="link" id="syncBtn" type="button">手机电脑同步</button> · <button class="link" id="bkBtn" type="button">备份与恢复</button></p>
 </main>
 
 <!-- ============ page: habit library ============ -->
@@ -213,6 +216,28 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
   </div>
 </div>
 
+<div class="sheet tall" id="syncSheet" hidden role="dialog" aria-labelledby="syncTitle">
+  <div class="sheet-head"><h3 id="syncTitle">手机电脑同步</h3><button class="x" id="syncClose" type="button">关闭</button></div>
+  <div id="syncOff" class="bk">
+    <p class="hint">数据会存进你 GitHub 账号里的一个私密 Gist，只有你自己能看到。每台设备第一次使用时，要做下面两步：</p>
+    <ol class="steps">
+      <li><a id="tokLink" href="https://github.com/settings/tokens/new?scopes=gist&amp;description=daily-routine" target="_blank" rel="noopener">打开 GitHub 生成令牌</a>（要先登录 GitHub）。Expiration 选 <b>No expiration</b>，只勾选 <b>gist</b>，点页面底部的 Generate token，然后复制以 ghp_ 开头的令牌。</li>
+      <li>粘贴到下面，点「连接」。另一台设备可以用同一个令牌。</li>
+    </ol>
+    <form id="tokForm" class="form">
+      <label class="full">GitHub 令牌<input id="tokInput" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_…" required></label>
+      <div class="row"><button class="btn" type="submit" id="tokBtn">连接</button></div>
+    </form>
+    <p class="hint">令牌只保存在这台设备上，等同于密码，不要发给别人。</p>
+  </div>
+  <div id="syncOn" class="bk" hidden>
+    <p class="hint" id="syncInfo"></p>
+    <button class="btn" id="syncNowBtn" type="button">立即同步</button>
+    <button class="btn ghost" id="unlinkBtn" type="button">在这台设备上断开</button>
+    <p class="hint">断开只会删除这台设备上的令牌，数据仍然留在这台设备和 Gist 里。</p>
+  </div>
+</div>
+
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-labelledby="sheetTitle">
   <h3 id="sheetTitle">添加事项</h3>
@@ -236,7 +261,8 @@ const TEMPLATE=[
   {title:'运动 30 分钟',period:'pm',time:'19:00'},{title:'阅读 20 页',period:'pm',time:'21:30'},{title:'23:30 前睡觉',period:'pm',time:'23:00'}];
 const WD=['周日','周一','周二','周三','周四','周五','周六'];
 const $=id=>document.getElementById(id);
-let tasks=[]; let days={}; let library=[]; let lastBackup=''; let editing=false; let libFilter='idle';
+let tasks=[]; let days={}; let library=[]; let gone={}; let lastBackup=''; let editing=false; let libFilter='idle';
+const now=()=>Date.now();
 
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -250,13 +276,28 @@ let cur=todayKey(); // the date being viewed
 const norm=s=>String(s||'').trim().toLowerCase();
 const inRoutine=title=>tasks.some(t=>norm(t.title)===norm(title));
 const inLib=title=>library.some(h=>norm(h.title)===norm(title));
-function toLib(t,note){if(inLib(t.title))return false;library.unshift({id:uid(),title:t.title,note:note||'',period:t.period,time:t.time||'',addedAt:todayKey()});return true}
+function toLib(t,note){if(inLib(t.title))return false;library.unshift({id:uid(),title:t.title,note:note||'',period:t.period,time:t.time||'',addedAt:todayKey(),u:now()});return true}
+function stampDay(k){if(days[k])days[k].u=now()}
 
-/* ---------- storage: this device only ---------- */
+/* ---------- storage: this device, plus optional GitHub Gist sync ---------- */
 const LS='routine.v1';
 let storageOk=true;
 function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){storageOk=false;return {}}}
-function save(){try{localStorage.setItem(LS,JSON.stringify({tasks,days,library,lastBackup}));storageOk=true}catch(e){storageOk=false;toast('无法保存：浏览器禁止了本地存储（无痕模式？）')}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({tasks,days,library,gone,lastBackup}));storageOk=true}catch(e){storageOk=false;toast('无法保存：浏览器禁止了本地存储（无痕模式？）')}}
+function save(){saveLocal();schedulePush()}
+
+/* merge two copies: every task / habit / day keeps the newest edit (u = edit time); deletions are remembered in `gone` */
+function mergeData(a,b){
+  const g={...(a.gone||{})};for(const[k,v]of Object.entries(b.gone||{}))g[k]=Math.max(g[k]||0,v);
+  const cut=now()-400*864e5;for(const k in g)if(g[k]<cut)delete g[k];
+  const list=(x,y)=>{const m=new Map();for(const it of [...(x||[]),...(y||[])]){const o=m.get(it.id);if(!o||(it.u||0)>(o.u||0))m.set(it.id,it)}
+    return [...m.values()].filter(it=>!(g[it.id]&&g[it.id]>=(it.u||0)))};
+  const d={...(b.days||{})};for(const[k,v]of Object.entries(a.days||{}))if(!d[k]||(v.u||0)>=(d[k].u||0))d[k]=v;
+  return {tasks:list(a.tasks,b.tasks),library:list(a.library,b.library),days:d,gone:g};
+}
+function canon(x){const by=(p,q)=>p.id<q.id?-1:1;const days={};for(const k of Object.keys(x.days||{}).sort())days[k]=x.days[k];
+  const gone={};for(const k of Object.keys(x.gone||{}).sort())gone[k]=x.gone[k];
+  return JSON.stringify({tasks:[...(x.tasks||[])].sort(by),library:[...(x.library||[])].sort(by),days,gone})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
 
 /* ---------- logic ---------- */
@@ -266,7 +307,7 @@ function dayRec(k){return days[k]||{done:[],total:0}}
 function doneOn(k){const vis=tasksOn(k);return dayRec(k).done.filter(x=>vis.some(t=>t.id===x))}
 function toggle(id){
   const k=cur, vis=tasksOn(k);
-  const r={done:doneOn(k),total:vis.length};
+  const r={done:doneOn(k),total:vis.length,u:now()};
   const i=r.done.indexOf(id); i>=0?r.done.splice(i,1):r.done.push(id);
   days[k]=r; prune(); save(); render();
 }
@@ -316,7 +357,7 @@ function render(){
   const L=$('lists');L.textContent='';
   if(!tasks.length){
     L.innerHTML='<div class="empty"><h3>还没有每日事项</h3><p>点下方「添加」自己建，从习惯库里挑，或者先用一套示例模板，之后随时编辑删除。换了设备？点页面底部「备份与恢复」导入之前的备份。</p><div class="row"><button class="btn" id="tpl" type="button">使用示例模板</button><button class="btn ghost" id="tplLib" type="button">去习惯库挑选</button></div></div>';
-    $('tpl').onclick=()=>{tasks=TEMPLATE.map(x=>({...x,id:uid()}));save();render();toast('已添加 9 个示例事项')};
+    $('tpl').onclick=()=>{tasks=TEMPLATE.map(x=>({...x,id:uid(),u:now()}));save();render();toast('已添加 9 个示例事项')};
     $('tplLib').onclick=()=>go('library');
   }else if(!vis.length){
     L.innerHTML='<div class="empty"><h3>这一天还没有事项</h3><p>现在的事项都是这天之后才添加的。在这一天点「添加」，可以补记这一天的事项。</p></div>';
@@ -335,7 +376,7 @@ function render(){
       if(x.time){const tm=document.createElement('span');tm.className='time';tm.textContent=x.time;tx.append(tm)}
       li.append(cb,tx);
       if(editing){const b=document.createElement('button');b.className='del';b.type='button';b.textContent='删除';
-        b.onclick=()=>{tasks=tasks.filter(y=>y.id!==x.id);const r=days[t];if(r){r.done=r.done.filter(y=>y!==x.id);r.total=tasksOn(t).length}
+        b.onclick=()=>{tasks=tasks.filter(y=>y.id!==x.id);gone[x.id]=now();const r=days[t];if(r){r.done=r.done.filter(y=>y!==x.id);r.total=tasksOn(t).length;r.u=now()}
           const moved=toLib(x);save();render();toast(moved?'已从 Routine 移除，保存在习惯库':'已从 Routine 移除（习惯库里还有）')};li.append(b)}
       ul.append(li)}
     L.append(s)}
@@ -343,7 +384,7 @@ function render(){
   const has=tasks.length||library.length, ds=lastBackup?daysBetween(lastBackup,t):Infinity;
   $('remind').hidden=!(has&&ds>=14&&Object.keys(days).length>=3);
   $('remindText').textContent=lastBackup?('上次备份是 '+ds+' 天前，导出一份更安心'):'还没有备份过，换手机前记得导出';
-  $('saveNote').textContent=storageOk?'数据只保存在这台设备的浏览器里':'当前浏览器无法保存数据（无痕模式？）';
+  $('saveNote').textContent=!storageOk?'当前浏览器无法保存数据（无痕模式？）':syncStatusText();
   const idle=library.filter(h=>!inRoutine(h.title)).length;
   $('libBtn').textContent=idle?'习惯库 · '+idle:'习惯库';
   renderLib(); renderChips();
@@ -351,7 +392,8 @@ function render(){
 
 /* ---------- page: habit library ---------- */
 function renderLib(){
-  const idle=library.filter(h=>!inRoutine(h.title)), active=library.filter(h=>inRoutine(h.title));
+  const all=[...library].sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||'')||((b.u||0)-(a.u||0)));
+  const idle=all.filter(h=>!inRoutine(h.title)), active=all.filter(h=>inRoutine(h.title));
   $('libCount').textContent='共 '+library.length+' 个';
   const counts={idle:idle.length,active:active.length,all:library.length}, names={idle:'待坚持',active:'坚持中',all:'全部'};
   for(const b of $('libTabs').children){b.setAttribute('aria-selected',b.dataset.f===libFilter?'true':'false');b.textContent=names[b.dataset.f]+' '+counts[b.dataset.f]}
@@ -370,10 +412,10 @@ function renderLib(){
     const acts=document.createElement('div');acts.className='acts';
     if(inRoutine(h.title)){const g=document.createElement('span');g.className='tag';g.textContent='坚持中';acts.append(g)}
     else{const a=document.createElement('button');a.type='button';a.className='mini';a.textContent='加入';
-      a.onclick=()=>{const t=todayKey();tasks.push({id:uid(),title:h.title,period:h.period,time:h.time||'',since:t});if(days[t])days[t].total=tasksOn(t).length;save();render();toast('已加入'+PNAME[h.period]+'的 Routine')};acts.append(a)}
+      a.onclick=()=>{const t=todayKey();tasks.push({id:uid(),title:h.title,period:h.period,time:h.time||'',since:t,u:now()});if(days[t]){days[t].total=tasksOn(t).length;stampDay(t)}save();render();toast('已加入'+PNAME[h.period]+'的 Routine')};acts.append(a)}
     const d=document.createElement('button');d.type='button';d.className='del';d.textContent='删除';
     d.onclick=()=>{if(d.dataset.arm!=='1'){d.dataset.arm='1';d.textContent='确认删除';setTimeout(()=>{if(d.isConnected){d.dataset.arm='';d.textContent='删除'}},3000);return}
-      library=library.filter(x=>x.id!==h.id);save();render();toast('已从习惯库删除')};
+      library=library.filter(x=>x.id!==h.id);gone[h.id]=now();save();render();toast('已从习惯库删除')};
     acts.append(d);li.append(tx,acts);ul.append(li)}
 }
 $('libTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;libFilter=b.dataset.f;renderLib()});
@@ -411,14 +453,14 @@ $('fTitle').addEventListener('input',()=>{picked=null;renderChips();syncSaveBox(
 function openSheet(){closeSheet();$('sheet').hidden=false;$('scrim').hidden=false;$('fTitle').value='';$('fTime').value='';picked=null;renderChips();syncSaveBox();
   const d=parse(cur);$('sheetTitle').textContent=cur===todayKey()?'添加事项':'添加事项（从 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日起）';
   const h=new Date().getHours();$('fPeriod').value=h<11?'am':h<18?'day':'pm';if(!library.length)setTimeout(()=>$('fTitle').focus(),50)}
-function closeSheet(){$('sheet').hidden=true;$('bkSheet').hidden=true;$('scrim').hidden=true}
+function closeSheet(){$('sheet').hidden=true;$('bkSheet').hidden=true;$('syncSheet').hidden=true;$('scrim').hidden=true}
 $('addBtn').onclick=openSheet;$('cancel').onclick=closeSheet;$('scrim').onclick=closeSheet;
 $('editBtn').onclick=()=>{editing=!editing;render()};
 $('form').addEventListener('submit',e=>{e.preventDefault();const title=$('fTitle').value.trim();if(!title)return;
   if(inRoutine(title)){toast('Routine 里已经有这一项');return}
-  const x={id:uid(),title,period:$('fPeriod').value,time:$('fTime').value||'',since:cur};tasks.push(x);
+  const x={id:uid(),title,period:$('fPeriod').value,time:$('fTime').value||'',since:cur,u:now()};tasks.push(x);
   if($('fSaveLib').checked)toLib(x);
-  for(const k in days)if(k>=cur&&k<=todayKey())days[k].total=tasksOn(k).length;
+  for(const k in days)if(k>=cur&&k<=todayKey()){days[k].total=tasksOn(k).length;stampDay(k)}
   save();closeSheet();render();toast('已添加')});
 
 /* ---------- backup & restore ---------- */
@@ -440,7 +482,11 @@ $('exportBtn').onclick=async()=>{
 function restore(text){
   let d;try{d=JSON.parse(text)}catch(e){toast('看不懂这个备份：不是有效的备份内容');return}
   if(!d||d.app!=='daily-routine'||!Array.isArray(d.tasks)){toast('这不是每日 Routine 的备份');return}
-  tasks=d.tasks;library=Array.isArray(d.library)?d.library:[];days=d.days&&typeof d.days==='object'?d.days:{};
+  // restored items count as fresh edits so they also win on other synced devices
+  const n=now();
+  tasks=d.tasks.map(x=>({...x,u:n}));library=(Array.isArray(d.library)?d.library:[]).map(x=>({...x,u:n}));
+  days={};for(const[k,v]of Object.entries(d.days&&typeof d.days==='object'?d.days:{}))days[k]={...v,u:n};
+  for(const x of [...tasks,...library])delete gone[x.id];
   lastBackup=todayKey();save();closeSheet();render();
   toast('已恢复：'+tasks.length+' 个事项，'+library.length+' 个收藏习惯');
 }
@@ -455,9 +501,83 @@ function tick(){const t=todayKey();if(t!==lastToday){if(cur===lastToday)cur=t;la
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();render()}});
 setInterval(tick,60000);
 
+/* ---------- sync via a private GitHub Gist ---------- */
+const SYNC_KEY='routine.sync', GIST_DESC='daily-routine-sync', GIST_FILE='routine-data.json';
+let sync={}; try{sync=JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')||{}}catch(e){}
+let syncState='idle', syncErr='', pushTimer=null, syncing=null, again=false;
+const linked=()=>!!(sync.token&&sync.gistId);
+function saveSync(){try{localStorage.setItem(SYNC_KEY,JSON.stringify(sync))}catch(e){}}
+function ago(ts){if(!ts)return '';const s=(now()-ts)/1000;return s<60?'刚刚':s<3600?Math.floor(s/60)+' 分钟前':s<86400?Math.floor(s/3600)+' 小时前':new Date(ts).toLocaleDateString()}
+function syncStatusText(){
+  if(!linked())return '数据只保存在这台设备的浏览器里';
+  if(syncState==='busy')return '正在同步…';
+  if(syncState==='error')return '同步失败：'+syncErr;
+  if(syncState==='offline')return '离线中，联网后会自动同步';
+  return '已同步'+(sync.last?' · '+ago(sync.last):'');
+}
+function showSync(){$('saveNote').textContent=storageOk?syncStatusText():$('saveNote').textContent;
+  if(!$('syncSheet').hidden){$('syncOff').hidden=linked();$('syncOn').hidden=!linked();
+    $('syncInfo').textContent='已连接 GitHub 账号 '+(sync.login||'')+'。'+syncStatusText()+'。打开 App、回到 App、每次打卡后都会自动同步。'}}
+async function gh(path,opt={},token=sync.token){
+  const r=await fetch('https://api.github.com'+path,{...opt,cache:'no-store',headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json',...(opt.body?{'Content-Type':'application/json'}:{})}});
+  if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e}
+  return r.status===204?null:r.json();
+}
+function errText(e){if(!navigator.onLine)return 'offline';if(e&&e.status===401)return '令牌无效或已过期，请重新连接';if(e&&e.status===403)return 'GitHub 拒绝了请求，稍后再试';if(e&&e.status===404)return '找不到同步数据（Gist 被删了？），请重新连接';return '网络问题，稍后会重试'}
+function readGist(g){const f=g.files&&g.files[GIST_FILE];if(!f)return {};
+  if(f.truncated)throw Object.assign(new Error('too big'),{status:0});try{return JSON.parse(f.content||'{}')}catch(e){return {}}}
+async function fetchGistData(g){const f=g.files&&g.files[GIST_FILE];if(f&&f.truncated){const r=await fetch(f.raw_url,{cache:'no-store'});return r.json()}return readGist(g)}
+// pull → merge → push if the cloud copy is behind
+async function syncNow(){
+  if(!linked())return;
+  if(syncing){again=true;return syncing}
+  syncing=(async()=>{
+    syncState='busy';showSync();
+    try{
+      const g=await gh('/gists/'+sync.gistId);
+      const remote=await fetchGistData(g);
+      const merged=mergeData({tasks,library,days,gone},remote);
+      tasks=merged.tasks;library=merged.library;days=merged.days;gone=merged.gone;
+      saveLocal();render();
+      if(canon(merged)!==canon(remote)){
+        await gh('/gists/'+sync.gistId,{method:'PATCH',body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify({app:'daily-routine',version:2,...merged})}}})});
+      }
+      sync.last=now();saveSync();syncState='ok';syncErr='';
+    }catch(e){const t=errText(e);syncState=t==='offline'?'offline':'error';syncErr=t}
+    syncing=null;showSync();
+    if(again){again=false;syncNow()}
+  })();
+  return syncing;
+}
+function schedulePush(){if(!linked())return;clearTimeout(pushTimer);pushTimer=setTimeout(syncNow,1200)}
+async function connect(token){
+  const btn=$('tokBtn');btn.disabled=true;btn.textContent='连接中…';
+  try{
+    const user=await gh('/user',{},token);
+    let gist=null;
+    for(let page=1;page<=5&&!gist;page++){const list=await gh('/gists?per_page=100&page='+page,{},token);gist=list.find(x=>x.description===GIST_DESC&&x.files&&x.files[GIST_FILE]);if(list.length<100)break}
+    if(!gist){gist=await gh('/gists',{method:'POST',body:JSON.stringify({description:GIST_DESC,public:false,files:{[GIST_FILE]:{content:JSON.stringify({app:'daily-routine',version:2,tasks,library,days,gone})}}})},token)}
+    sync={token,gistId:gist.id,login:user.login,last:0};saveSync();
+    $('tokInput').value='';
+    await syncNow();
+    toast(syncState==='ok'?'已连接，开始同步':'已连接，但这次同步失败：'+syncErr);
+  }catch(e){toast(e&&e.status===401?'令牌不对：请确认复制完整，并勾选了 gist 权限':'连接失败：'+errText(e))}
+  btn.disabled=false;btn.textContent='连接';showSync();
+}
+$('syncBtn').onclick=()=>{closeSheet();$('syncSheet').hidden=false;$('scrim').hidden=false;showSync()};
+$('syncClose').onclick=()=>closeSheet();
+$('tokForm').addEventListener('submit',e=>{e.preventDefault();const v=$('tokInput').value.trim();if(v)connect(v)});
+$('syncNowBtn').onclick=()=>syncNow().then(()=>toast(syncState==='ok'?'已同步':syncStatusText()));
+$('unlinkBtn').onclick=e=>{const b=e.currentTarget;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='确认断开';setTimeout(()=>{b.dataset.arm='';b.textContent='在这台设备上断开'},3000);return}
+  sync={};saveSync();syncState='idle';b.dataset.arm='';b.textContent='在这台设备上断开';showSync();render();toast('已断开，这台设备不再同步')};
+window.addEventListener('online',()=>syncNow());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncNow()});
+setInterval(()=>{if(!document.hidden)syncNow()},120000);
+
 /* boot */
-const local=lsLoad();tasks=local.tasks||[];days=local.days||{};library=local.library||[];lastBackup=local.lastBackup||'';
+const local=lsLoad();tasks=local.tasks||[];days=local.days||{};library=local.library||[];gone=local.gone||{};lastBackup=local.lastBackup||'';
 route();
+syncNow();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>
 </body>

@@ -19,16 +19,22 @@
 :root{
   --bg:#EEF2F1; --surface:#FFFFFF; --fg:#17201E; --muted:#5E6B68; --line:#D6DEDC;
   --accent:#1F7A68; --accent-soft:#D3EAE4; --sun:#E0A23A; --done:#9AA6A3; --danger:#B3443A; --warn-soft:#F6E7C8; --warn:#7A5512;
+  --c-life:#2E8B6E; --c-work:#3B6FB6; --c-research:#7A55B0; --c-hobby:#C8702A;
+  --c-life-bg:#D8EFE7; --c-work-bg:#DCE6F5; --c-research-bg:#E8DFF4; --c-hobby-bg:#F8E4D2;
   --h0:#E2E8E6; --h1:#B9DDD3; --h2:#7FC2AF; --h3:#3F9C85; --h4:#1F7A68;
   --f-body:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
   --f-num:ui-rounded,"SF Pro Rounded",system-ui,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --c-life:#4FC1A6; --c-work:#7AA6EC; --c-research:#B293E0; --c-hobby:#E89A55;
+  --c-life-bg:#1C3832; --c-work-bg:#1D2B42; --c-research-bg:#2C2440; --c-hobby-bg:#3B2A1B;
   --h0:#222D2A; --h1:#1F4A40; --h2:#2A6F5E; --h3:#3A9A81; --h4:#4FC1A6;
   --bg:#0F1514; --surface:#18211F; --fg:#E6EEEC; --muted:#93A29E; --line:#2A3633;
   --accent:#4FC1A6; --accent-soft:#1E3A33; --sun:#E8B25A; --done:#5F6E6A; --danger:#E0786D; --warn-soft:#3A2F1A; --warn:#E8C98A; color-scheme:dark}}
 :root[data-theme="dark"]{
+  --c-life:#4FC1A6; --c-work:#7AA6EC; --c-research:#B293E0; --c-hobby:#E89A55;
+  --c-life-bg:#1C3832; --c-work-bg:#1D2B42; --c-research-bg:#2C2440; --c-hobby-bg:#3B2A1B;
   --h0:#222D2A; --h1:#1F4A40; --h2:#2A6F5E; --h3:#3A9A81; --h4:#4FC1A6;
   --bg:#0F1514; --surface:#18211F; --fg:#E6EEEC; --muted:#93A29E; --line:#2A3633;
   --accent:#4FC1A6; --accent-soft:#1E3A33; --sun:#E8B25A; --done:#5F6E6A; --danger:#E0786D; --warn-soft:#3A2F1A; --warn:#E8C98A; color-scheme:dark}
@@ -200,6 +206,36 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
 .ref .chips-r{display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow-y:auto}
 .ref .chip b{font:600 12px var(--f-num);color:var(--muted);margin-right:4px}
 .bar-bottom .btn{padding-inline:8px}
+/* categories */
+.cat-life{--cc:var(--c-life);--cbg:var(--c-life-bg)} .cat-work{--cc:var(--c-work);--cbg:var(--c-work-bg)}
+.cat-research{--cc:var(--c-research);--cbg:var(--c-research-bg)} .cat-hobby{--cc:var(--c-hobby);--cbg:var(--c-hobby-bg)}
+.catdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cc);margin-right:5px;vertical-align:1px}
+.t .meta{display:block;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.catbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.catbar::-webkit-scrollbar{display:none}
+.catbar .chip{flex:none;background:var(--surface)}
+.catbar .chip[aria-pressed="true"]{background:var(--cbg,var(--accent-soft));border-color:var(--cc,var(--accent));color:var(--fg)}
+/* calendar-style template grid */
+.calwrap{margin-top:12px}
+.cal{position:relative;-webkit-user-select:none;user-select:none;cursor:copy}
+.hl{position:absolute;left:0;right:0;border-top:1px solid var(--line);height:0;pointer-events:none}
+.hl span{position:absolute;left:0;top:-8px;width:40px;text-align:right;font:600 11px var(--f-num);color:var(--muted);background:var(--surface);padding-right:4px;font-variant-numeric:tabular-nums}
+.hl.half{left:48px;border-top-style:dashed;opacity:.55}
+.blks{position:absolute;left:48px;right:0;top:0;bottom:0}
+.blk{position:absolute;box-sizing:border-box;border-radius:8px;padding:3px 6px 8px 6px;background:var(--cbg);border-left:4px solid var(--cc);color:var(--fg);overflow:hidden;cursor:grab;touch-action:pan-y;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:box-shadow .15s,transform .15s;border-top:1px solid var(--surface)}
+.blk.lift{box-shadow:0 10px 24px rgba(0,0,0,.28);transform:scale(1.03);z-index:5;cursor:grabbing}
+.blk .bt{display:block;font-size:13px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+.blk .bm{display:block;font:11px var(--f-num);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.blk.tiny{padding-top:0;padding-bottom:0;display:flex;align-items:center}
+.blk.tiny .bt{white-space:nowrap;font-size:12px} .blk.tiny .bm{display:none}
+.blk .rh{position:absolute;left:0;right:0;bottom:0;height:14px;cursor:ns-resize;touch-action:none;display:grid;place-items:end center;padding-bottom:3px}
+.blk .rh::after{content:"";width:24px;height:3px;border-radius:2px;background:var(--cc);opacity:.8}
+.blk .ok{position:absolute;top:2px;right:5px;font-size:11px;color:var(--cc);font-weight:700}
+.blk .live{position:absolute;right:6px;bottom:12px;font:600 11px var(--f-num);color:var(--cc)}
+.addrow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.addrow .catbar{flex-wrap:wrap;overflow:visible;min-width:0}
+.addrow .mini{flex:none;white-space:nowrap}
+.blk.tiny .rh{display:none}
 .steps li{display:list-item;padding:0;border:0;min-height:0}
 .steps a{color:var(--accent);font-weight:500}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;z-index:30;max-width:calc(100% - 32px);text-align:center}
@@ -242,8 +278,9 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
     <form id="libForm" class="form">
       <label class="full">习惯<input id="lTitle" required maxlength="40" placeholder="例如：睡前写三件好事" autocomplete="off"></label>
       <label class="full">为什么想坚持（可选）<input id="lNote" maxlength="80" placeholder="例如：睡得更安稳" autocomplete="off"></label>
+      <label>分类<select id="lCat" class="catsel"></select></label>
       <label>时段<select id="lPeriod"><option value="am">早晨</option><option value="day">白天</option><option value="pm">晚上</option></select></label>
-      <label>时间（可选）<input id="lTime" type="time"></label>
+      <label class="full">大概什么时候（可选）<input id="lWhen" maxlength="30" placeholder="例如：周末睡前、午饭后" autocomplete="off"></label>
       <div class="row"><button type="submit" class="btn">存入习惯库</button></div>
     </form>
   </div>
@@ -252,24 +289,19 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
     <button type="button" role="tab" data-f="active" aria-selected="false">坚持中</button>
     <button type="button" role="tab" data-f="all" aria-selected="false">全部</button>
   </div>
+  <div class="catbar" id="libCats" aria-label="按分类筛选"></div>
   <ul id="libList"></ul>
 </main>
 
 <!-- ============ page: hourly routine templates ============ -->
 <main class="wrap" id="tplPage" hidden>
   <div class="topbar"><button class="back" id="tplBack" type="button">‹ 返回</button><h1>Routine 模板</h1></div>
-  <p class="hint">按小时排好的一天，可以有好几套。添加事项时可以参照模板，也可以一键把整套加入 Routine。点模板里的事项可以修改。</p>
+  <p class="hint">像日历一样按小时排好的一天，可以有好几套。点空白处添加；<b>按住</b>事项拖动可以换位置，拖底部的小横条可以拉长或缩短；轻点事项可以修改。</p>
   <div class="pchips" id="pChips" role="tablist" aria-label="选择模板"></div>
   <div class="card" id="pCard">
     <label class="pname"><input id="pName" maxlength="20" aria-label="模板名称"><span id="pCount"></span></label>
-    <div class="tl" id="timeline"></div>
-    <form id="pItemForm" class="form pform">
-      <h4 id="piHead">往模板里加一项</h4>
-      <label>时间<input id="piTime" type="time" required></label>
-      <label>事项<input id="piTitle" required maxlength="40" placeholder="例如：午饭后散步" autocomplete="off"></label>
-      <div class="chips" id="piChipBox" hidden><span>从习惯库选</span><div id="piChips"></div></div>
-      <div class="row"><button type="button" class="btn ghost" id="piCancel" hidden>取消修改</button><button type="submit" class="btn" id="piSubmit">加到模板</button></div>
-    </form>
+    <div class="addrow"><div class="catbar" id="pLegend"></div><button class="mini" id="pAdd" type="button">＋ 添加</button></div>
+    <div class="calwrap"><div class="cal" id="cal" aria-label="模板时间表，点空白处添加"></div></div>
   </div>
   <div class="pacts">
     <button class="btn" id="pApply" type="button">全部加入 Routine</button>
@@ -336,6 +368,19 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
   </div>
 </div>
 
+<div class="sheet tall" id="blkSheet" hidden role="dialog" aria-labelledby="blkTitle">
+  <div class="sheet-head"><h3 id="blkTitle">添加到模板</h3><button class="x" id="blkClose" type="button">关闭</button></div>
+  <form id="blkForm" class="form">
+    <div class="chips" id="bChipBox" hidden><span>从习惯库选</span><div id="bChips"></div></div>
+    <label class="full">事项<input id="bTitle" required maxlength="40" placeholder="例如：读一篇论文" autocomplete="off"></label>
+    <label>分类<select id="bCat" class="catsel"></select></label>
+    <label>大概时间备注<input id="bWhen" maxlength="30" placeholder="例如：午饭后" autocomplete="off"></label>
+    <label>开始<input id="bStart" type="time" step="900" required></label>
+    <label>时长<select id="bDur"><option value="15">15 分钟</option><option value="30">30 分钟</option><option value="45">45 分钟</option><option value="60">1 小时</option><option value="90">1.5 小时</option><option value="120">2 小时</option><option value="180">3 小时</option><option value="240">4 小时</option></select></label>
+    <div class="row"><button type="button" class="del" id="bDel" hidden>从模板删除</button><button type="submit" class="btn" id="bSave">保存</button></div>
+  </form>
+</div>
+
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-labelledby="sheetTitle">
   <h3 id="sheetTitle">添加事项</h3>
@@ -343,8 +388,9 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
     <div class="ref" id="refBox" hidden><div class="rh"><span>参照模板</span><select id="refSel" aria-label="参照哪个模板"></select></div><div class="chips-r" id="refChips"></div></div>
     <div class="chips" id="chipBox" hidden><span>从习惯库选</span><div id="chips"></div></div>
     <label class="full">事项<input id="fTitle" required maxlength="40" placeholder="例如：喝一杯温水" autocomplete="off"></label>
+    <label>分类<select id="fCat" class="catsel"></select></label>
     <label>时段<select id="fPeriod"><option value="am">早晨</option><option value="day">白天</option><option value="pm">晚上</option></select></label>
-    <label>时间（可选）<input id="fTime" type="time"></label>
+    <label class="full">大概什么时候（可选）<input id="fWhen" maxlength="30" placeholder="例如：周末睡前、午饭后" autocomplete="off"></label>
     <label class="full check" id="fSaveWrap"><input id="fSaveLib" type="checkbox" checked>同时存入习惯库</label>
     <div class="row"><button type="button" class="btn ghost" id="cancel">取消</button><button type="submit" class="btn">保存</button></div>
   </form>
@@ -354,13 +400,29 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
 <script>
 const PERIODS=[{k:'am',name:'早晨',c:'var(--sun)'},{k:'day',name:'白天',c:'var(--accent)'},{k:'pm',name:'晚上',c:'var(--muted)'}];
 const PNAME={am:'早晨',day:'白天',pm:'晚上'};
-// starter hourly templates (fixed ids so every device seeds the same ones; u:0 so any edit wins)
+const CATS=[{k:'life',name:'生活习惯'},{k:'work',name:'工作'},{k:'research',name:'研究'},{k:'hobby',name:'兴趣'}];
+const CNAME=Object.fromEntries(CATS.map(c=>[c.k,c.name]));
+const catOf=x=>CNAME[x&&x.cat]?x.cat:'life';
+for(const sel of document.querySelectorAll('.catsel'))for(const c of CATS)sel.append(new Option(c.name,c.k));
+// starter templates (fixed ids so every device seeds the same ones; u:0 so any edit wins)
+const S=(id,name,rows)=>({id,name,u:0,items:rows.map(([start,dur,title,cat,when],i)=>({id:id+'-'+i,start,dur,title,cat,when:when||''}))});
 const SEED_PATTERNS=[
-  {id:'p-work',name:'工作日',items:[['06:30','起床后喝一杯水'],['06:40','拉伸 10 分钟'],['07:00','吃早餐'],['08:00','通勤听播客'],['09:00','专注工作 2 小时'],['12:00','午饭'],['12:40','午饭后散步'],['15:00','起身喝水休息'],['18:30','晚饭'],['19:30','运动 30 分钟'],['21:30','阅读 20 页'],['22:30','放下手机'],['23:00','睡觉']]},
-  {id:'p-weekend',name:'周末',items:[['08:00','起床后喝一杯水'],['08:30','做一顿早餐'],['10:00','整理房间'],['12:00','午饭'],['14:00','学习或兴趣 1 小时'],['16:00','户外散步'],['19:00','晚饭'],['21:00','写一周回顾'],['23:30','睡觉']]},
-  {id:'p-sport',name:'运动日',items:[['06:30','起床后喝一杯水'],['07:00','晨跑 30 分钟'],['07:40','早餐补充蛋白质'],['12:30','午休 20 分钟'],['18:30','力量训练'],['19:30','拉伸放松'],['22:30','睡觉']]}
-].map(p=>({id:p.id,name:p.name,u:0,items:p.items.map(([time,title],i)=>({id:p.id+'-'+i,time,title}))}));
+  S('p-work','工作日',[['06:30',15,'起床后喝一杯水','life','起床后'],['06:45',15,'拉伸','life','起床后'],['07:00',30,'早餐','life'],['08:00',45,'通勤听播客','hobby','通勤路上'],['09:00',120,'专注工作','work','上午'],['11:00',60,'读一篇论文','research','上午'],['12:00',45,'午饭','life'],['12:45',15,'午饭后散步','life','午饭后'],['13:30',90,'会议与沟通','work','下午'],['15:00',120,'研究写作','research','下午'],['18:30',60,'晚饭','life'],['19:30',45,'运动','life','晚饭后'],['21:00',60,'阅读 / 兴趣','hobby','睡前'],['22:30',30,'放下手机','life','睡前'],['23:00',30,'睡觉','life']]),
+  S('p-weekend','周末',[['08:00',15,'起床后喝一杯水','life','起床后'],['08:30',60,'做一顿早餐','life'],['10:00',60,'整理房间','life','上午'],['12:00',60,'午饭','life'],['14:00',120,'学习或兴趣','hobby','下午'],['16:00',60,'户外散步','life','下午'],['19:00',60,'晚饭','life'],['21:00',30,'写一周回顾','research','睡前'],['22:30',30,'睡前拉伸','life','周末睡前'],['23:00',30,'睡觉','life']]),
+  S('p-sport','运动日',[['06:30',15,'起床后喝一杯水','life','起床后'],['06:45',45,'晨跑','life','早上'],['07:40',20,'早餐补充蛋白质','life'],['09:00',180,'专注工作','work','上午'],['12:30',20,'午休','life','午饭后'],['14:00',120,'实验 / 数据分析','research','下午'],['18:30',60,'力量训练','life','下班后'],['19:30',20,'拉伸放松','life','运动后'],['22:30',30,'睡觉','life']])
+];
 const periodOf=time=>{if(!time)return 'day';const h=+time.slice(0,2);return h<11?'am':h<18?'day':'pm'};
+const toMin=t=>{const [h,m]=String(t||'09:00').split(':').map(Number);return h*60+(m||0)};
+const fromMin=m=>pad(Math.floor(m/60)%24)+':'+pad(m%60);
+const approx=x=>x.when||('约 '+x.start);
+// bring older saved data up to the current shape
+function normalize(){
+  for(const x of [...tasks,...library]){if(!x.cat)x.cat='life';if(x.time&&!x.when)x.when=x.time;delete x.time}
+  patterns=patterns.map(p=>{const seed=SEED_PATTERNS.find(z=>z.id===p.id);
+    if(seed&&!p.u&&(!p.items[0]||!p.items[0].start))return JSON.parse(JSON.stringify(seed));
+    for(const x of p.items){if(!x.start)x.start=x.time||'09:00';delete x.time;if(!x.dur)x.dur=30;if(!x.cat)x.cat='life';if(x.when==null)x.when=''}
+    return p});
+}
 const WD=['周日','周一','周二','周三','周四','周五','周六'];
 const $=id=>document.getElementById(id);
 let tasks=[]; let days={}; let library=[]; let gone={}; let patterns=[]; let seeded=false; let lastBackup=''; let editing=false; let libFilter='idle';
@@ -378,7 +440,7 @@ let cur=todayKey(); // the date being viewed
 const norm=s=>String(s||'').trim().toLowerCase();
 const inRoutine=title=>tasks.some(t=>norm(t.title)===norm(title));
 const inLib=title=>library.some(h=>norm(h.title)===norm(title));
-function toLib(t,note){if(inLib(t.title))return false;library.unshift({id:uid(),title:t.title,note:note||'',period:t.period,time:t.time||'',addedAt:todayKey(),u:now()});return true}
+function toLib(t,note){if(inLib(t.title))return false;library.unshift({id:uid(),title:t.title,note:note||'',period:t.period,when:t.when||'',cat:catOf(t),addedAt:todayKey(),u:now()});return true}
 function stampDay(k){if(days[k])days[k].u=now()}
 
 /* ---------- storage: this device, plus optional GitHub Gist sync ---------- */
@@ -464,7 +526,8 @@ function render(){
   }else if(!vis.length){
     L.innerHTML='<div class="empty"><h3>这一天还没有事项</h3><p>现在的事项都是这天之后才添加的。在这一天点「添加」，可以补记这一天的事项。</p></div>';
   }else for(const P of PERIODS){
-    const list=vis.filter(x=>x.period===P.k).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+    const sk=x=>{if(x.at!=null)return x.at;const m=/(\d{1,2}):(\d{2})/.exec(x.when||'');return m?+m[1]*60+ +m[2]:9999};
+    const list=vis.filter(x=>x.period===P.k).sort((a,b)=>sk(a)-sk(b));
     if(!list.length&&!editing)continue;
     const s=document.createElement('section');
     s.innerHTML='<h2><span class="sw"></span></h2><ul></ul>';
@@ -475,7 +538,7 @@ function render(){
       const cb=document.createElement('input');cb.type='checkbox';cb.className='chk';cb.id='c-'+x.id;cb.checked=isD;cb.setAttribute('aria-label',x.title);cb.onchange=()=>toggle(x.id);
       const tx=document.createElement('label');tx.className='t';tx.htmlFor=cb.id;
       const ti=document.createElement('span');ti.className='title';ti.textContent=x.title;tx.append(ti);
-      if(x.time){const tm=document.createElement('span');tm.className='time';tm.textContent=x.time;tx.append(tm)}
+      const mt=document.createElement('span');mt.className='meta cat-'+catOf(x);const dot=document.createElement('i');dot.className='catdot';mt.append(dot,CNAME[catOf(x)]+(x.when?' · '+x.when:''));tx.append(mt);
       li.append(cb,tx);
       if(editing){const b=document.createElement('button');b.className='del';b.type='button';b.textContent='删除';
         b.onclick=()=>{tasks=tasks.filter(y=>y.id!==x.id);gone[x.id]=now();const r=days[t];if(r){r.done=r.done.filter(y=>y!==x.id);r.total=tasksOn(t).length;r.u=now()}
@@ -493,28 +556,37 @@ function render(){
 }
 
 /* ---------- page: habit library ---------- */
+let libCat='';
 function renderLib(){
+  const inCat=h=>!libCat||catOf(h)===libCat;
   const all=[...library].sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||'')||((b.u||0)-(a.u||0)));
-  const idle=all.filter(h=>!inRoutine(h.title)), active=all.filter(h=>inRoutine(h.title));
+  const idle=all.filter(h=>!inRoutine(h.title)&&inCat(h)), active=all.filter(h=>inRoutine(h.title)&&inCat(h));
   $('libCount').textContent='共 '+library.length+' 个';
-  const counts={idle:idle.length,active:active.length,all:library.length}, names={idle:'待坚持',active:'坚持中',all:'全部'};
+  const counts={idle:idle.length,active:active.length,all:idle.length+active.length}, names={idle:'待坚持',active:'坚持中',all:'全部'};
   for(const b of $('libTabs').children){b.setAttribute('aria-selected',b.dataset.f===libFilter?'true':'false');b.textContent=names[b.dataset.f]+' '+counts[b.dataset.f]}
+  const cb=$('libCats');cb.textContent='';
+  for(const c of [{k:'',name:'全部分类'},...CATS]){const b=document.createElement('button');b.type='button';b.className='chip'+(c.k?' cat-'+c.k:'');
+    const n=library.filter(h=>!c.k||catOf(h)===c.k).length;
+    if(c.k){const d=document.createElement('i');d.className='catdot';b.append(d)}b.append(c.name+' '+n);
+    b.setAttribute('aria-pressed',libCat===c.k?'true':'false');b.onclick=()=>{libCat=c.k;renderLib()};cb.append(b)}
   const ul=$('libList');ul.textContent='';
   const show=libFilter==='idle'?idle:libFilter==='active'?active:[...idle,...active];
   if(!show.length){
     const msg=!library.length?'还没有收藏的习惯。在上面输入一个，或者添加事项时勾选「同时存入习惯库」。'
-      :libFilter==='idle'?'所有收藏的习惯都已经在 Routine 里了。':'还没有正在坚持的习惯，在「待坚持」里点「加入」。';
+      :libCat&&!library.some(inCat)?'「'+CNAME[libCat]+'」分类里还没有习惯。'
+      :libFilter==='idle'?'这里的习惯都已经在 Routine 里了。':'还没有正在坚持的习惯，在「待坚持」里点「加入」。';
     ul.innerHTML='<div class="empty-sec"></div>';ul.firstChild.textContent=msg;return}
   for(const h of show){
     const li=document.createElement('li');li.className='lib-item';
     const tx=document.createElement('div');tx.className='t';
     const ti=document.createElement('span');ti.className='title';ti.textContent=h.title;tx.append(ti);
     if(h.note){const w=document.createElement('span');w.className='why';w.textContent=h.note;tx.append(w)}
-    const m=document.createElement('span');m.className='time';m.textContent=(PNAME[h.period]||'')+(h.time?' · '+h.time:'')+(h.addedAt?' · 收藏于 '+h.addedAt.replace(/-/g,'/'):'');tx.append(m);
+    const m=document.createElement('span');m.className='meta cat-'+catOf(h);const dot=document.createElement('i');dot.className='catdot';
+    m.append(dot,CNAME[catOf(h)]+' · '+(PNAME[h.period]||'')+(h.when?' · '+h.when:'')+(h.addedAt?' · 收藏于 '+h.addedAt.replace(/-/g,'/'):''));tx.append(m);
     const acts=document.createElement('div');acts.className='acts';
     if(inRoutine(h.title)){const g=document.createElement('span');g.className='tag';g.textContent='坚持中';acts.append(g)}
     else{const a=document.createElement('button');a.type='button';a.className='mini';a.textContent='加入';
-      a.onclick=()=>{const t=todayKey();tasks.push({id:uid(),title:h.title,period:h.period,time:h.time||'',since:t,u:now()});if(days[t]){days[t].total=tasksOn(t).length;stampDay(t)}save();render();toast('已加入'+PNAME[h.period]+'的 Routine')};acts.append(a)}
+      a.onclick=()=>{const t=todayKey();tasks.push({id:uid(),title:h.title,period:h.period||'day',when:h.when||'',cat:catOf(h),since:t,u:now()});if(days[t]){days[t].total=tasksOn(t).length;stampDay(t)}save();render();toast('已加入'+(PNAME[h.period]||'')+'的 Routine')};acts.append(a)}
     const d=document.createElement('button');d.type='button';d.className='del';d.textContent='删除';
     d.onclick=()=>{if(d.dataset.arm!=='1'){d.dataset.arm='1';d.textContent='确认删除';setTimeout(()=>{if(d.isConnected){d.dataset.arm='';d.textContent='删除'}},3000);return}
       library=library.filter(x=>x.id!==h.id);gone[h.id]=now();save();render();toast('已从习惯库删除')};
@@ -523,8 +595,8 @@ function renderLib(){
 $('libTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;libFilter=b.dataset.f;renderLib()});
 $('libForm').addEventListener('submit',e=>{e.preventDefault();const title=$('lTitle').value.trim();if(!title)return;
   if(inLib(title)){toast('习惯库里已经有了');return}
-  toLib({title,period:$('lPeriod').value,time:$('lTime').value},$('lNote').value.trim());save();
-  $('lTitle').value='';$('lNote').value='';$('lTime').value='';libFilter='idle';render();toast('已存入习惯库')});
+  toLib({title,period:$('lPeriod').value,when:$('lWhen').value.trim(),cat:$('lCat').value},$('lNote').value.trim());save();
+  $('lTitle').value='';$('lNote').value='';$('lWhen').value='';libFilter='idle';render();toast('已存入习惯库')});
 
 /* ---------- routing between the two pages ---------- */
 let navigatedIn=false;
@@ -535,10 +607,9 @@ function route(){
   const page=location.hash.slice(1), sub=!!PAGES[page];
   const lib=page==='library', yr=page==='year';
   $('mainPage').hidden=sub;for(const [k,id] of Object.entries(PAGES))$(id).hidden=k!==page;$('bottomBar').hidden=sub;
-  if(page==='templates')resetItemForm();
   closeSheet();window.scrollTo(0,0);
   if(yr){viewYear=parse(cur).getFullYear()}
-  if(lib){$('lTitle').value='';$('lNote').value='';$('lTime').value='';const h=new Date().getHours();$('lPeriod').value=h<11?'am':h<18?'day':'pm'}
+  if(lib){$('lTitle').value='';$('lNote').value='';$('lWhen').value='';const h=new Date().getHours();$('lPeriod').value=h<11?'am':h<18?'day':'pm';if(libCat)$('lCat').value=libCat}
   else navigatedIn=false;
   render();
 }
@@ -548,84 +619,151 @@ $('libBack').onclick=back;
 $('yearBtn').onclick=()=>go('year');
 $('yearBack').onclick=back;
 
-/* ---------- page: hourly routine templates ---------- */
-let curPat='', editItem=null;
+/* ---------- page: calendar-style routine templates ---------- */
+const HH=56, D0=5, D1=24;            // px per hour, first and last hour shown
+const snap=m=>Math.round(m/15)*15;
+let curPat='', drag=null, blkEdit=null;
 const pat=()=>patterns.find(p=>p.id===curPat)||patterns[0];
 function touchPat(p){p.u=now();save()}
+function layout(items){ // side-by-side columns for overlapping blocks
+  const it=[...items].sort((a,b)=>toMin(a.start)-toMin(b.start)||b.dur-a.dur), out=new Map();
+  let cluster=[],cols=[],end=-1;
+  const flush=()=>{for(const c of cluster)out.set(c.x.id,{col:c.col,n:cols.length});cluster=[];cols=[]};
+  for(const x of it){const s=toMin(x.start),e=s+x.dur;if(s>=end&&cluster.length){flush();end=-1}
+    let col=cols.findIndex(ce=>ce<=s);if(col<0){col=cols.length;cols.push(e)}else cols[col]=e;
+    cluster.push({x,col});end=Math.max(end,e)}
+  flush();return out;
+}
 function renderTpl(){
-  if($('tplPage').hidden)return;
+  if($('tplPage').hidden||drag)return;
   const P=pat(); if(P)curPat=P.id;
   const C=$('pChips');C.textContent='';
   for(const p of patterns){const b=document.createElement('button');b.type='button';b.className='pchip';b.textContent=p.name||'未命名';b.setAttribute('aria-pressed',p.id===curPat?'true':'false');
-    b.onclick=()=>{curPat=p.id;resetItemForm();renderTpl()};C.append(b)}
+    b.onclick=()=>{curPat=p.id;renderTpl()};C.append(b)}
   const add=document.createElement('button');add.type='button';add.className='pchip add';add.textContent='＋ 新模板';
-  add.onclick=()=>{const p={id:'p-'+uid(),name:'新模板 '+(patterns.length+1),items:[],u:now()};patterns.push(p);curPat=p.id;save();resetItemForm();renderTpl();setTimeout(()=>{$('pName').focus();$('pName').select()},50)};C.append(add);
+  add.onclick=()=>{const p={id:'p-'+uid(),name:'新模板 '+(patterns.length+1),items:[],u:now()};patterns.push(p);curPat=p.id;save();renderTpl();setTimeout(()=>{$('pName').focus();$('pName').select()},50)};C.append(add);
   $('pCard').hidden=!P;$('pApply').disabled=!P;$('pDup').hidden=!P;$('pDel').hidden=!P;
   if(!P)return;
   if(document.activeElement!==$('pName'))$('pName').value=P.name;
-  const items=[...P.items].sort((a,b)=>a.time.localeCompare(b.time));
-  $('pCount').textContent=items.length+' 项';
-  const T=$('timeline');T.textContent='';
-  if(!items.length){T.innerHTML='<div class="empty-sec">这个模板还是空的，用下面的表单按时间加事项。</div>'}
-  else{
-    const h0=+items[0].time.slice(0,2), h1=+items[items.length-1].time.slice(0,2);
-    for(let h=h0;h<=h1;h++){
-      const inHour=items.filter(x=>+x.time.slice(0,2)===h);
-      const row=document.createElement('div');row.className='hr'+(inHour.length?'':' empty');
-      const lab=document.createElement('b');lab.textContent=pad(h)+':00';
-      const box=document.createElement('div');
-      for(const x of inHour){
-        const it=document.createElement('div');it.className='ti '+periodOf(x.time)+(editItem===x.id?' editing':'');
-        const tm=document.createElement('span');tm.className='tm';tm.textContent=x.time;
-        const tt=document.createElement('button');tt.type='button';tt.className='tt';tt.textContent=x.title;tt.setAttribute('aria-label','修改 '+x.time+' '+x.title);
-        tt.onclick=()=>{editItem=x.id;$('piTime').value=x.time;$('piTitle').value=x.title;$('piHead').textContent='修改这一项';$('piSubmit').textContent='保存修改';$('piCancel').hidden=false;renderTpl();$('pItemForm').scrollIntoView({behavior:'smooth',block:'center'})};
-        it.append(tm,tt);
-        if(inRoutine(x.title)){const g=document.createElement('span');g.className='tag';g.textContent='已在 Routine';it.append(g)}
-        const rm=document.createElement('button');rm.type='button';rm.className='rm';rm.textContent='×';rm.setAttribute('aria-label','从模板删除 '+x.title);
-        rm.onclick=()=>{P.items=P.items.filter(y=>y.id!==x.id);if(editItem===x.id)resetItemForm();touchPat(P);renderTpl();toast('已从模板删除')};
-        it.append(rm);box.append(it)}
-      row.append(lab,box);T.append(row)}
-  }
-  // habit-library chips for quick fill
-  const pc=$('piChips');pc.textContent='';const titles=new Set(P.items.map(x=>norm(x.title)));
-  const libs=library.filter(h=>!titles.has(norm(h.title)));
-  $('piChipBox').hidden=!libs.length||!!editItem;
-  for(const h of libs){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=h.title;
-    b.onclick=()=>{$('piTitle').value=h.title;if(h.time)$('piTime').value=h.time;$('piTitle').focus()};pc.append(b)}
-  const left=items.filter(x=>!inRoutine(x.title)).length;
+  $('pCount').textContent=P.items.length+' 项';
+  const lg=$('pLegend');lg.textContent='';
+  for(const c of CATS){const n=P.items.filter(x=>catOf(x)===c.k).reduce((s,x)=>s+x.dur,0);if(!n)continue;
+    const sp=document.createElement('span');sp.className='tag cat-'+c.k;sp.style.background='var(--cbg)';sp.style.color='var(--fg)';
+    const d=document.createElement('i');d.className='catdot';sp.append(d,c.name+' '+(n%60?(n/60).toFixed(1):n/60)+'h');lg.append(sp)}
+  // grid
+  const cal=$('cal');cal.textContent='';cal.style.height=(D1-D0)*HH+'px';
+  for(let h=D0;h<D1;h++){
+    const l=document.createElement('div');l.className='hl';l.style.top=(h-D0)*HH+'px';const sp=document.createElement('span');sp.textContent=pad(h)+':00';l.append(sp);cal.append(l);
+    const hf=document.createElement('div');hf.className='hl half';hf.style.top=(h-D0+.5)*HH+'px';cal.append(hf)}
+  const layer=document.createElement('div');layer.className='blks';cal.append(layer);
+  const lay=layout(P.items);
+  for(const x of P.items){
+    const L=lay.get(x.id), s=toMin(x.start);
+    const el=document.createElement('div');el.className='blk cat-'+catOf(x);el.dataset.id=x.id;
+    el.style.top=((s-D0*60)/60*HH)+'px';el.style.height=Math.max(14,x.dur/60*HH-2)+'px';
+    el.style.left='calc('+(L.col/L.n*100)+'% + 2px)';el.style.width='calc('+(100/L.n)+'% - 4px)';
+    if(x.dur<=20)el.classList.add('tiny');
+    el.setAttribute('role','button');el.tabIndex=0;el.setAttribute('aria-label',x.start+' 开始，'+x.dur+' 分钟，'+x.title+'。轻点修改');
+    const bt=document.createElement('span');bt.className='bt';bt.textContent=x.title;
+    const bm=document.createElement('span');bm.className='bm';bm.textContent=x.start+'–'+fromMin(s+x.dur)+(x.when?' · '+x.when:'');
+    el.append(bt,bm);
+    if(inRoutine(x.title)){const ok=document.createElement('span');ok.className='ok';ok.textContent='✓';ok.title='已在 Routine';el.append(ok)}
+    const rh=document.createElement('div');rh.className='rh';rh.setAttribute('aria-hidden','true');el.append(rh);
+    el.addEventListener('pointerdown',e=>startDrag(e,x,el,e.target===rh?'resize':'move'));
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openBlk(x)}});
+    layer.append(el)}
+  const left=P.items.filter(x=>!inRoutine(x.title)).length;
   $('pApply').textContent=left?'把 '+left+' 项加入 Routine':'都已在 Routine 里';$('pApply').disabled=!left;
 }
-function resetItemForm(){editItem=null;$('piTime').value='';$('piTitle').value='';$('piHead').textContent='往模板里加一项';$('piSubmit').textContent='加到模板';$('piCancel').hidden=true}
-$('piCancel').onclick=()=>{resetItemForm();renderTpl()};
-$('pItemForm').addEventListener('submit',e=>{e.preventDefault();const P=pat();if(!P)return;
-  const time=$('piTime').value, title=$('piTitle').value.trim();if(!time||!title)return;
-  if(editItem){const x=P.items.find(y=>y.id===editItem);if(x){x.time=time;x.title=title}toast('已保存修改')}
-  else{if(P.items.some(y=>norm(y.title)===norm(title))){toast('模板里已经有这一项了');return}P.items.push({id:uid(),time,title});toast('已加到 '+time)}
-  touchPat(P);resetItemForm();renderTpl()});
+/* drag to move (press and hold on touch), drag the bottom bar to resize */
+function startDrag(e,x,el,mode){
+  if(e.button>0)return;
+  drag={x,el,mode,y0:e.pageY,s0:toMin(x.start),d0:x.dur,active:false,moved:false,pid:e.pointerId,type:e.pointerType};
+  if(mode==='resize'){e.preventDefault();activate()}
+  else if(e.pointerType!=='mouse')drag.timer=setTimeout(activate,300);
+}
+function activate(){if(!drag)return;drag.active=true;drag.el.classList.add('lift');try{drag.el.setPointerCapture(drag.pid)}catch(_){}
+  try{if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(8)}catch(_){}
+  const lv=document.createElement('span');lv.className='live';drag.el.append(lv);drag.live=lv;showLive()}
+function showLive(){const s=drag.ns??drag.s0,d=drag.nd??drag.d0;if(drag.live)drag.live.textContent=fromMin(s)+'–'+fromMin(s+d)}
+document.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.pid)return;
+  const pageY=e.clientY+window.scrollY, dy=pageY-drag.y0;
+  if(!drag.active){
+    if(Math.abs(dy)>6||Math.abs(e.movementX||0)>6){
+      if(drag.type==='mouse'&&drag.mode==='move')activate();else{clearTimeout(drag.timer);drag=null;return}
+    }else return}
+  drag.moved=true;
+  const dm=dy/HH*60;
+  if(drag.mode==='move'){const ns=Math.min(Math.max(snap(drag.s0+dm),D0*60),D1*60-drag.d0);drag.ns=ns;drag.el.style.top=((ns-D0*60)/60*HH)+'px'}
+  else{const nd=Math.min(Math.max(snap(drag.d0+dm),15),D1*60-drag.s0);drag.nd=nd;drag.el.style.height=Math.max(14,nd/60*HH-2)+'px'}
+  showLive();
+  if(e.clientY>innerHeight-70)window.scrollBy(0,10);else if(e.clientY<70)window.scrollBy(0,-10);
+});
+function endDrag(e,cancel){
+  if(!drag||(e&&e.pointerId!==drag.pid))return;
+  clearTimeout(drag.timer);const d=drag;drag=null;
+  if(!d.active&&!d.moved&&!cancel){openBlk(d.x);return}
+  if(cancel||(d.ns==null&&d.nd==null)){renderTpl();return}
+  const P=pat();const x=P.items.find(y=>y.id===d.x.id);
+  if(x){if(d.ns!=null)x.start=fromMin(d.ns);if(d.nd!=null)x.dur=d.nd;touchPat(P)}
+  renderTpl();toast(d.mode==='move'?'移到 '+x.start:'时长 '+x.dur+' 分钟');
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+document.addEventListener('touchmove',e=>{if(drag&&drag.active)e.preventDefault()},{passive:false});
+// tap on an empty spot: add at that time
+$('cal').addEventListener('click',e=>{if(e.target.closest('.blk'))return;const r=$('cal').getBoundingClientRect();
+  const m=Math.min(Math.max(Math.floor(((e.clientY-r.top)/HH*60+D0*60)/30)*30,D0*60),D1*60-30);openBlk(null,fromMin(m))});
+$('pAdd').onclick=()=>openBlk(null,'09:00');
+function openBlk(x,start){
+  const P=pat();if(!P)return;blkEdit=x?x.id:null;
+  closeSheet();$('blkSheet').hidden=false;$('scrim').hidden=false;
+  $('blkTitle').textContent=x?'修改「'+x.title+'」':'添加到「'+P.name+'」';
+  $('bTitle').value=x?x.title:'';$('bCat').value=x?catOf(x):'life';$('bWhen').value=x?x.when||'':'';
+  $('bStart').value=x?x.start:start;
+  const dv=String(x?x.dur:30);if(![...$('bDur').options].some(o=>o.value===dv))$('bDur').append(new Option(dv+' 分钟',dv));$('bDur').value=dv;
+  $('bDel').hidden=!x;$('bSave').textContent=x?'保存修改':'加到模板';
+  const titles=new Set(P.items.map(y=>norm(y.title)));const libs=library.filter(h=>!titles.has(norm(h.title)));
+  $('bChipBox').hidden=!!x||!libs.length;const c=$('bChips');c.textContent='';
+  for(const h of libs){const b=document.createElement('button');b.type='button';b.className='chip cat-'+catOf(h);const d=document.createElement('i');d.className='catdot';b.append(d,h.title);
+    b.onclick=()=>{$('bTitle').value=h.title;$('bCat').value=catOf(h);$('bWhen').value=h.when||''};c.append(b)}
+}
+$('blkClose').onclick=()=>closeSheet();
+$('blkForm').addEventListener('submit',e=>{e.preventDefault();const P=pat();if(!P)return;
+  const title=$('bTitle').value.trim();if(!title)return;
+  let s=Math.min(Math.max(snap(toMin($('bStart').value)),D0*60),D1*60-15), dur=Math.min(+$('bDur').value,D1*60-s);
+  const v={title,cat:$('bCat').value,when:$('bWhen').value.trim(),start:fromMin(s),dur};
+  if(blkEdit){const x=P.items.find(y=>y.id===blkEdit);if(x)Object.assign(x,v);toast('已保存')}
+  else{P.items.push({id:uid(),...v});toast('已加到 '+v.start)}
+  touchPat(P);closeSheet();renderTpl()});
+$('bDel').onclick=e=>{const b=e.currentTarget;if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='确认删除';setTimeout(()=>{b.dataset.arm='';b.textContent='从模板删除'},3000);return}
+  b.dataset.arm='';b.textContent='从模板删除';const P=pat();P.items=P.items.filter(y=>y.id!==blkEdit);touchPat(P);closeSheet();renderTpl();toast('已从模板删除')};
 $('pName').addEventListener('change',()=>{const P=pat();if(!P)return;const v=$('pName').value.trim()||'未命名';if(v!==P.name){P.name=v;touchPat(P);renderTpl()}});
 $('pApply').onclick=()=>{const P=pat();if(!P)return;const t=todayKey();let n=0;
-  for(const x of [...P.items].sort((a,b)=>a.time.localeCompare(b.time)))if(!inRoutine(x.title)){tasks.push({id:uid(),title:x.title,time:x.time,period:periodOf(x.time),since:t,u:now()});n++}
+  for(const x of [...P.items].sort((a,b)=>toMin(a.start)-toMin(b.start)))if(!inRoutine(x.title)){tasks.push({id:uid(),title:x.title,cat:catOf(x),when:approx(x),at:toMin(x.start),period:periodOf(x.start),since:t,u:now()});n++}
   if(days[t]){days[t].total=tasksOn(t).length;stampDay(t)}
   save();render();toast(n?'已把 '+n+' 项加入 Routine':'都已经在 Routine 里了')};
-$('pDup').onclick=()=>{const P=pat();if(!P)return;const c={id:'p-'+uid(),name:P.name+' 副本',u:now(),items:P.items.map(x=>({...x,id:uid()}))};patterns.push(c);curPat=c.id;save();resetItemForm();renderTpl();toast('已复制，可以改名和修改')};
+$('pDup').onclick=()=>{const P=pat();if(!P)return;const c={id:'p-'+uid(),name:P.name+' 副本',u:now(),items:P.items.map(x=>({...x,id:uid()}))};patterns.push(c);curPat=c.id;save();renderTpl();toast('已复制，可以改名和修改')};
 $('pDel').onclick=e=>{const b=e.currentTarget,P=pat();if(!P)return;
   if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='确认删除「'+P.name+'」';setTimeout(()=>{b.dataset.arm='';b.textContent='删除这个模板'},3000);return}
-  patterns=patterns.filter(x=>x.id!==P.id);gone[P.id]=now();curPat='';b.dataset.arm='';b.textContent='删除这个模板';save();resetItemForm();renderTpl();toast('已删除模板')};
+  patterns=patterns.filter(x=>x.id!==P.id);gone[P.id]=now();curPat='';b.dataset.arm='';b.textContent='删除这个模板';save();renderTpl();toast('已删除模板')};
 $('tplBtn').onclick=()=>go('templates');
 $('tplBack').onclick=back;
 
 /* add sheet: reference a template */
-let refPat='';
+let refPat='', refAt=null;
 function renderRef(){
   const box=$('refBox');box.hidden=!patterns.length;if(!patterns.length)return;
   if(!patterns.some(p=>p.id===refPat)){const wd=new Date().getDay();refPat=(patterns.find(p=>p.id===(wd===0||wd===6?'p-weekend':'p-work'))||patterns[0]).id}
   const sel=$('refSel');sel.textContent='';for(const p of patterns)sel.append(new Option(p.name,p.id));sel.value=refPat;
   const P=patterns.find(p=>p.id===refPat), c=$('refChips');c.textContent='';
-  const items=[...P.items].sort((a,b)=>a.time.localeCompare(b.time)).filter(x=>!inRoutine(x.title));
+  const items=[...P.items].sort((a,b)=>toMin(a.start)-toMin(b.start)).filter(x=>!inRoutine(x.title));
   if(!items.length){c.innerHTML='<span class="hint">这个模板的事项都已经在 Routine 里了。</span>';return}
-  for(const x of items){const b=document.createElement('button');b.type='button';b.className='chip';
-    const tb=document.createElement('b');tb.textContent=x.time;b.append(tb,x.title);
-    b.onclick=()=>{$('fTitle').value=x.title;$('fTime').value=x.time;$('fPeriod').value=periodOf(x.time);picked=null;renderChips();syncSaveBox();
+  for(const x of items){const b=document.createElement('button');b.type='button';b.className='chip cat-'+catOf(x);
+    const tb=document.createElement('b');tb.textContent=x.start;b.append(tb,x.title);
+    b.onclick=()=>{refAt={title:x.title,at:toMin(x.start)};$('fTitle').value=x.title;$('fWhen').value=approx(x);$('fCat').value=catOf(x);$('fPeriod').value=periodOf(x.start);picked=null;renderChips();syncSaveBox();
       for(const y of c.children)y.setAttribute('aria-pressed','false');b.setAttribute('aria-pressed','true')};
     c.append(b)}
 }
@@ -649,7 +787,7 @@ function renderYear(){
   // habit filter
   const sel=$('ySel');if(yTask&&!tasks.some(x=>x.id===yTask))yTask='';
   sel.textContent='';const o0=new Option('全部事项','');sel.append(o0);
-  for(const P of PERIODS)for(const x of tasks.filter(y=>y.period===P.k))sel.append(new Option(P.name+' · '+x.title,x.id));
+  for(const c of CATS){const xs=tasks.filter(y=>catOf(y)===c.k);if(!xs.length)continue;const g=document.createElement('optgroup');g.label=c.name;for(const x of xs)g.append(new Option(x.title,x.id));sel.append(g)}
   sel.value=yTask;
   // stats for the year (up to today)
   let full=0,tracked=0,sum=0,best=0,run=0;
@@ -694,19 +832,20 @@ function renderChips(){
   const idle=library.filter(h=>!inRoutine(h.title));
   $('chipBox').hidden=!idle.length;const c=$('chips');c.textContent='';
   for(const h of idle){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=h.title;b.setAttribute('aria-pressed',picked===h.id?'true':'false');
-    b.onclick=()=>{picked=h.id;$('fTitle').value=h.title;$('fPeriod').value=h.period;$('fTime').value=h.time||'';renderChips();syncSaveBox()};c.append(b)}
+    b.onclick=()=>{picked=h.id;$('fTitle').value=h.title;$('fPeriod').value=h.period||'day';$('fWhen').value=h.when||'';$('fCat').value=catOf(h);renderChips();syncSaveBox()};c.append(b)}
 }
 function syncSaveBox(){$('fSaveWrap').hidden=inLib($('fTitle').value)}
 $('fTitle').addEventListener('input',()=>{picked=null;renderChips();syncSaveBox()});
-function openSheet(){closeSheet();$('sheet').hidden=false;$('scrim').hidden=false;$('fTitle').value='';$('fTime').value='';picked=null;renderChips();syncSaveBox();renderRef();
+function openSheet(){closeSheet();$('sheet').hidden=false;$('scrim').hidden=false;$('fTitle').value='';$('fWhen').value='';$('fCat').value='life';picked=null;renderChips();syncSaveBox();renderRef();
   const d=parse(cur);$('sheetTitle').textContent=cur===todayKey()?'添加事项':'添加事项（从 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日起）';
   const h=new Date().getHours();$('fPeriod').value=h<11?'am':h<18?'day':'pm';if(!library.length)setTimeout(()=>$('fTitle').focus(),50)}
-function closeSheet(){$('sheet').hidden=true;$('bkSheet').hidden=true;$('syncSheet').hidden=true;$('scrim').hidden=true}
+function closeSheet(){$('sheet').hidden=true;$('bkSheet').hidden=true;$('syncSheet').hidden=true;$('blkSheet').hidden=true;$('scrim').hidden=true}
 $('addBtn').onclick=openSheet;$('cancel').onclick=closeSheet;$('scrim').onclick=closeSheet;
 $('editBtn').onclick=()=>{editing=!editing;render()};
 $('form').addEventListener('submit',e=>{e.preventDefault();const title=$('fTitle').value.trim();if(!title)return;
   if(inRoutine(title)){toast('Routine 里已经有这一项');return}
-  const x={id:uid(),title,period:$('fPeriod').value,time:$('fTime').value||'',since:cur,u:now()};tasks.push(x);
+  const x={id:uid(),title,period:$('fPeriod').value,when:$('fWhen').value.trim(),cat:$('fCat').value,since:cur,u:now()};
+  if(refAt&&norm(refAt.title)===norm(title))x.at=refAt.at;refAt=null;tasks.push(x);
   if($('fSaveLib').checked)toLib(x);
   for(const k in days)if(k>=cur&&k<=todayKey()){days[k].total=tasksOn(k).length;stampDay(k)}
   save();closeSheet();render();toast('已添加')});
@@ -787,7 +926,7 @@ async function syncNow(){
       const remote=await fetchGistData(g);
       const merged=mergeData({tasks,library,patterns,days,gone},remote);
       tasks=merged.tasks;library=merged.library;patterns=merged.patterns;days=merged.days;gone=merged.gone;
-      saveLocal();render();
+      normalize();saveLocal();render();
       if(canon(merged)!==canon(remote)){
         await gh('/gists/'+sync.gistId,{method:'PATCH',body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify({app:'daily-routine',version:2,...merged})}}})});
       }
@@ -825,7 +964,8 @@ setInterval(()=>{if(!document.hidden)syncNow()},120000);
 
 /* boot */
 const local=lsLoad();tasks=local.tasks||[];days=local.days||{};library=local.library||[];gone=local.gone||{};patterns=local.patterns||[];seeded=!!local.seeded;lastBackup=local.lastBackup||'';
-if(!seeded){for(const p of SEED_PATTERNS)if(!patterns.some(x=>x.id===p.id)&&!gone[p.id])patterns.push(JSON.parse(JSON.stringify(p)));seeded=true;saveLocal()}
+if(!seeded){for(const p of SEED_PATTERNS)if(!patterns.some(x=>x.id===p.id)&&!gone[p.id])patterns.push(JSON.parse(JSON.stringify(p)));seeded=true}
+normalize();saveLocal();
 route();
 syncNow();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}

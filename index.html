@@ -142,7 +142,8 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
 .tabs button{flex:1;border:0;background:none;color:var(--muted);font:500 14px var(--f-body);padding:8px 4px;border-radius:9px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
 .lib-item{align-items:flex-start}
-.lib-item .t{cursor:default}
+.lib-item .t{cursor:pointer}
+.edit{border:0;background:none;color:var(--accent);font-size:14px;padding:6px 8px;cursor:pointer}
 .lib-item .why{display:block;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .lib-item .acts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
 .mini{border:0;border-radius:9px;padding:6px 12px;font:500 14px var(--f-body);cursor:pointer;background:var(--accent);color:var(--surface)}
@@ -391,6 +392,7 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
     <label>分类<select id="fCat" class="catsel"></select></label>
     <label>时段<select id="fPeriod"><option value="am">早晨</option><option value="day">白天</option><option value="pm">晚上</option></select></label>
     <label class="full">大概什么时候（可选）<input id="fWhen" maxlength="30" placeholder="例如：周末睡前、午饭后" autocomplete="off"></label>
+    <label class="full" id="fNoteWrap" hidden>为什么想坚持（可选）<input id="fNote" maxlength="80" placeholder="例如：睡得更安稳" autocomplete="off"></label>
     <label class="full check" id="fSaveWrap"><input id="fSaveLib" type="checkbox" checked>同时存入习惯库</label>
     <div class="row"><button type="button" class="btn ghost" id="cancel">取消</button><button type="submit" class="btn">保存</button></div>
   </form>
@@ -540,6 +542,8 @@ function render(){
       const ti=document.createElement('span');ti.className='title';ti.textContent=x.title;tx.append(ti);
       const mt=document.createElement('span');mt.className='meta cat-'+catOf(x);const dot=document.createElement('i');dot.className='catdot';mt.append(dot,CNAME[catOf(x)]+(x.when?' · '+x.when:''));tx.append(mt);
       li.append(cb,tx);
+      if(editing){tx.htmlFor='';tx.onclick=()=>openEdit('task',x.id);
+        const ed=document.createElement('button');ed.className='edit';ed.type='button';ed.textContent='修改';ed.onclick=()=>openEdit('task',x.id);li.append(ed)}
       if(editing){const b=document.createElement('button');b.className='del';b.type='button';b.textContent='删除';
         b.onclick=()=>{tasks=tasks.filter(y=>y.id!==x.id);gone[x.id]=now();const r=days[t];if(r){r.done=r.done.filter(y=>y!==x.id);r.total=tasksOn(t).length;r.u=now()}
           const moved=toLib(x);save();render();toast(moved?'已从 Routine 移除，保存在习惯库':'已从 Routine 移除（习惯库里还有）')};li.append(b)}
@@ -583,7 +587,9 @@ function renderLib(){
     if(h.note){const w=document.createElement('span');w.className='why';w.textContent=h.note;tx.append(w)}
     const m=document.createElement('span');m.className='meta cat-'+catOf(h);const dot=document.createElement('i');dot.className='catdot';
     m.append(dot,CNAME[catOf(h)]+' · '+(PNAME[h.period]||'')+(h.when?' · '+h.when:'')+(h.addedAt?' · 收藏于 '+h.addedAt.replace(/-/g,'/'):''));tx.append(m);
+    tx.onclick=()=>openEdit('lib',h.id);
     const acts=document.createElement('div');acts.className='acts';
+    const ed=document.createElement('button');ed.type='button';ed.className='edit';ed.textContent='修改';ed.onclick=()=>openEdit('lib',h.id);acts.append(ed);
     if(inRoutine(h.title)){const g=document.createElement('span');g.className='tag';g.textContent='坚持中';acts.append(g)}
     else{const a=document.createElement('button');a.type='button';a.className='mini';a.textContent='加入';
       a.onclick=()=>{const t=todayKey();tasks.push({id:uid(),title:h.title,period:h.period||'day',when:h.when||'',cat:catOf(h),since:t,u:now()});if(days[t]){days[t].total=tasksOn(t).length;stampDay(t)}save();render();toast('已加入'+(PNAME[h.period]||'')+'的 Routine')};acts.append(a)}
@@ -830,25 +836,47 @@ $('ySel').onchange=e=>{yTask=e.target.value;renderYear()};
 let picked=null;
 function renderChips(){
   const idle=library.filter(h=>!inRoutine(h.title));
-  $('chipBox').hidden=!idle.length;const c=$('chips');c.textContent='';
+  $('chipBox').hidden=!!editT||!idle.length;const c=$('chips');c.textContent='';
   for(const h of idle){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=h.title;b.setAttribute('aria-pressed',picked===h.id?'true':'false');
     b.onclick=()=>{picked=h.id;$('fTitle').value=h.title;$('fPeriod').value=h.period||'day';$('fWhen').value=h.when||'';$('fCat').value=catOf(h);renderChips();syncSaveBox()};c.append(b)}
 }
-function syncSaveBox(){$('fSaveWrap').hidden=inLib($('fTitle').value)}
-$('fTitle').addEventListener('input',()=>{picked=null;renderChips();syncSaveBox()});
-function openSheet(){closeSheet();$('sheet').hidden=false;$('scrim').hidden=false;$('fTitle').value='';$('fWhen').value='';$('fCat').value='life';picked=null;renderChips();syncSaveBox();renderRef();
+function syncSaveBox(){$('fSaveWrap').hidden=!!editT||inLib($('fTitle').value)}
+$('fTitle').addEventListener('input',()=>{if(editT)return;picked=null;renderChips();syncSaveBox()});
+let editT=null; // {kind:'task'|'lib', id} while the sheet edits an existing item
+function sheetMode(on){editT=on;$('fNoteWrap').hidden=!(on&&on.kind==='lib')}
+function openEdit(kind,id){const src=kind==='task'?tasks:library;const x=src.find(y=>y.id===id);if(!x)return;
+  closeSheet();$('sheet').hidden=false;$('scrim').hidden=false;
+  $('fTitle').value=x.title;$('fCat').value=catOf(x);$('fPeriod').value=x.period||'day';$('fWhen').value=x.when||'';$('fNote').value=x.note||'';
+  $('refBox').hidden=true;$('chipBox').hidden=true;$('fSaveWrap').hidden=true;sheetMode({kind,id});
+  $('sheetTitle').textContent=kind==='task'?'修改事项':'修改习惯'}
+function openSheet(){closeSheet();sheetMode(null);$('sheet').hidden=false;$('scrim').hidden=false;$('fTitle').value='';$('fWhen').value='';$('fCat').value='life';picked=null;renderChips();syncSaveBox();renderRef();
   const d=parse(cur);$('sheetTitle').textContent=cur===todayKey()?'添加事项':'添加事项（从 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日起）';
   const h=new Date().getHours();$('fPeriod').value=h<11?'am':h<18?'day':'pm';if(!library.length)setTimeout(()=>$('fTitle').focus(),50)}
-function closeSheet(){$('sheet').hidden=true;$('bkSheet').hidden=true;$('syncSheet').hidden=true;$('blkSheet').hidden=true;$('scrim').hidden=true}
+function closeSheet(){editT=null;$('sheet').hidden=true;$('bkSheet').hidden=true;$('syncSheet').hidden=true;$('blkSheet').hidden=true;$('scrim').hidden=true}
 $('addBtn').onclick=openSheet;$('cancel').onclick=closeSheet;$('scrim').onclick=closeSheet;
 $('editBtn').onclick=()=>{editing=!editing;render()};
 $('form').addEventListener('submit',e=>{e.preventDefault();const title=$('fTitle').value.trim();if(!title)return;
+  if(editT){saveEdit(title);return}
   if(inRoutine(title)){toast('Routine 里已经有这一项');return}
   const x={id:uid(),title,period:$('fPeriod').value,when:$('fWhen').value.trim(),cat:$('fCat').value,since:cur,u:now()};
   if(refAt&&norm(refAt.title)===norm(title))x.at=refAt.at;refAt=null;tasks.push(x);
   if($('fSaveLib').checked)toLib(x);
   for(const k in days)if(k>=cur&&k<=todayKey()){days[k].total=tasksOn(k).length;stampDay(k)}
   save();closeSheet();render();toast('已添加')});
+
+// save an edited task or library habit; the matching item on the other side (same title) gets the same changes
+function saveEdit(title){
+  const {kind,id}=editT, mine=kind==='task'?tasks:library, other=kind==='task'?library:tasks;
+  const x=mine.find(y=>y.id===id);if(!x){closeSheet();return}
+  const old=norm(x.title), twin=other.find(y=>norm(y.title)===old);
+  if(norm(title)!==old&&(mine.some(y=>y.id!==id&&norm(y.title)===norm(title))||other.some(y=>y!==twin&&norm(y.title)===norm(title)))){
+    toast(kind==='task'?'已经有同名的事项了':'习惯库里已经有同名的习惯了');return}
+  const when=$('fWhen').value.trim();
+  for(const y of [x,twin]){if(!y)continue;
+    if(y.when!==when||y.period!==$('fPeriod').value)delete y.at;
+    y.title=title;y.cat=$('fCat').value;y.period=$('fPeriod').value;y.when=when;y.u=now()}
+  if(kind==='lib')x.note=$('fNote').value.trim();
+  save();closeSheet();render();toast(twin?'已修改（Routine 和习惯库都更新了）':'已修改')}
 
 /* ---------- backup & restore ---------- */
 function snapshot(){return {app:'daily-routine',version:1,exportedAt:new Date().toISOString(),tasks,library,patterns,days}}

@@ -19,14 +19,17 @@
 :root{
   --bg:#EEF2F1; --surface:#FFFFFF; --fg:#17201E; --muted:#5E6B68; --line:#D6DEDC;
   --accent:#1F7A68; --accent-soft:#D3EAE4; --sun:#E0A23A; --done:#9AA6A3; --danger:#B3443A; --warn-soft:#F6E7C8; --warn:#7A5512;
+  --h0:#E2E8E6; --h1:#B9DDD3; --h2:#7FC2AF; --h3:#3F9C85; --h4:#1F7A68;
   --f-body:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
   --f-num:ui-rounded,"SF Pro Rounded",system-ui,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --h0:#222D2A; --h1:#1F4A40; --h2:#2A6F5E; --h3:#3A9A81; --h4:#4FC1A6;
   --bg:#0F1514; --surface:#18211F; --fg:#E6EEEC; --muted:#93A29E; --line:#2A3633;
   --accent:#4FC1A6; --accent-soft:#1E3A33; --sun:#E8B25A; --done:#5F6E6A; --danger:#E0786D; --warn-soft:#3A2F1A; --warn:#E8C98A; color-scheme:dark}}
 :root[data-theme="dark"]{
+  --h0:#222D2A; --h1:#1F4A40; --h2:#2A6F5E; --h3:#3A9A81; --h4:#4FC1A6;
   --bg:#0F1514; --surface:#18211F; --fg:#E6EEEC; --muted:#93A29E; --line:#2A3633;
   --accent:#4FC1A6; --accent-soft:#1E3A33; --sun:#E8B25A; --done:#5F6E6A; --danger:#E0786D; --warn-soft:#3A2F1A; --warn:#E8C98A; color-scheme:dark}
 *{box-sizing:border-box}
@@ -139,6 +142,30 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
 .mini{border:0;border-radius:9px;padding:6px 12px;font:500 14px var(--f-body);cursor:pointer;background:var(--accent);color:var(--surface)}
 .tag{font-size:12px;padding:4px 10px;border-radius:9px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
 .steps{margin:0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+/* year calendar page */
+.yearbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.yearbar b{font:700 22px var(--f-num);font-variant-numeric:tabular-nums;min-width:64px;text-align:center}
+.yearbar select{margin-left:auto;font:15px var(--f-body);padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);max-width:55%;min-width:0}
+.ystats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ystats div{background:var(--surface);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;min-width:0}
+.ystats b{font:700 22px var(--f-num);font-variant-numeric:tabular-nums}
+.ystats span{font-size:12px;color:var(--muted)}
+.legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);justify-content:flex-end}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+@media (min-width:520px){.months{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mon{background:var(--surface);border-radius:12px;padding:10px 8px 8px}
+.mon h3{margin:0 0 6px 2px;font-size:13px;font-weight:700;display:flex;justify-content:space-between}
+.mon h3 span{font:500 12px var(--f-num);color:var(--muted);font-variant-numeric:tabular-nums}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.mgrid .wk{font-size:10px;color:var(--muted);text-align:center;line-height:1.4}
+.cell{aspect-ratio:1;border:0;border-radius:4px;padding:0;font:10px var(--f-num);color:var(--muted);display:grid;place-items:center;cursor:pointer;background:var(--h0);max-width:100%}
+.cell.l1{background:var(--h1);color:var(--fg)} .cell.l2{background:var(--h2);color:var(--fg)}
+.cell.l3{background:var(--h3);color:var(--surface)} .cell.l4{background:var(--h4);color:var(--surface)}
+.cell.fut{background:none;color:var(--line);cursor:default}
+.cell.today{outline:2px solid var(--sun);outline-offset:-1px}
+.cell.pad{background:none;cursor:default}
+.ylink{border:0;background:none;color:var(--accent);font:500 13px var(--f-body);cursor:pointer;padding:0;margin-left:auto}
 .steps li{display:list-item;padding:0;border:0;min-height:0}
 .steps a{color:var(--accent);font-weight:500}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;z-index:30;max-width:calc(100% - 32px);text-align:center}
@@ -167,7 +194,7 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
   </header>
   <div class="past" id="pastNote" hidden></div>
   <div class="week" id="week"></div>
-  <div class="stats"><span>连续全勤 <b id="streak">0</b> 天</span><span id="rateLabel">这 7 天完成率 <b id="rate7">0%</b></span></div>
+  <div class="stats"><span>连续全勤 <b id="streak">0</b> 天</span><span id="rateLabel">这 7 天完成率 <b id="rate7">0%</b></span><button class="ylink" id="yearBtn" type="button">年度日历 ›</button></div>
   <div class="remind" id="remind" hidden><span id="remindText"></span><button class="mini" type="button" id="remindBtn">去备份</button></div>
   <div id="lists"></div>
   <p class="note"><span id="saveNote">数据只保存在这台设备的浏览器里</span><br><button class="link" id="syncBtn" type="button">手机电脑同步</button> · <button class="link" id="bkBtn" type="button">备份与恢复</button></p>
@@ -192,6 +219,19 @@ li.is-done .title{color:var(--done);text-decoration:line-through}
     <button type="button" role="tab" data-f="all" aria-selected="false">全部</button>
   </div>
   <ul id="libList"></ul>
+</main>
+
+<!-- ============ page: year calendar ============ -->
+<main class="wrap" id="yearPage" hidden>
+  <div class="topbar"><button class="back" id="yearBack" type="button">‹ 返回</button><h1>年度日历</h1></div>
+  <div class="yearbar">
+    <button class="nav" id="yPrev" type="button" aria-label="上一年">‹</button><b id="yLabel"></b><button class="nav" id="yNext" type="button" aria-label="下一年">›</button>
+    <select id="ySel" aria-label="看哪个事项"></select>
+  </div>
+  <div class="ystats" id="yStats"></div>
+  <div class="legend"><span>完成度 0%</span><i style="background:var(--h0)"></i><i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i><span>100%</span></div>
+  <div class="months" id="months"></div>
+  <p class="note">点任意一天，可以跳到那天查看或补打卡。</p>
 </main>
 
 <div class="bar-bottom" id="bottomBar">
@@ -387,7 +427,7 @@ function render(){
   $('saveNote').textContent=!storageOk?'当前浏览器无法保存数据（无痕模式？）':syncStatusText();
   const idle=library.filter(h=>!inRoutine(h.title)).length;
   $('libBtn').textContent=idle?'习惯库 · '+idle:'习惯库';
-  renderLib(); renderChips();
+  renderLib(); renderChips(); renderYear();
 }
 
 /* ---------- page: habit library ---------- */
@@ -426,12 +466,13 @@ $('libForm').addEventListener('submit',e=>{e.preventDefault();const title=$('lTi
 
 /* ---------- routing between the two pages ---------- */
 let navigatedIn=false;
-function go(page){if(page==='library'){navigatedIn=true;location.hash='library'}else back()}
+function go(page){if(page==='library'||page==='year'){navigatedIn=true;location.hash=page}else back()}
 function back(){if(navigatedIn){navigatedIn=false;history.back()}else{history.replaceState(null,'',location.pathname+location.search);route()}}
 function route(){
-  const lib=location.hash==='#library';
-  $('mainPage').hidden=lib;$('libPage').hidden=!lib;$('bottomBar').hidden=lib;
+  const lib=location.hash==='#library', yr=location.hash==='#year';
+  $('mainPage').hidden=lib||yr;$('libPage').hidden=!lib;$('yearPage').hidden=!yr;$('bottomBar').hidden=lib||yr;
   closeSheet();window.scrollTo(0,0);
+  if(yr){viewYear=parse(cur).getFullYear()}
   if(lib){$('lTitle').value='';$('lNote').value='';$('lTime').value='';const h=new Date().getHours();$('lPeriod').value=h<11?'am':h<18?'day':'pm'}
   else navigatedIn=false;
   render();
@@ -439,6 +480,65 @@ function route(){
 window.addEventListener('hashchange',route);
 $('libBtn').onclick=()=>go('library');
 $('libBack').onclick=back;
+$('yearBtn').onclick=()=>go('year');
+$('yearBack').onclick=back;
+
+/* ---------- page: year calendar ---------- */
+let viewYear=new Date().getFullYear(), yTask='';
+function level(r){return r>=1?4:r>=.67?3:r>=.34?2:r>0?1:0}
+function dayLevel(k){
+  if(!yTask)return level(ratio(k));
+  const t=tasks.find(x=>x.id===yTask);if(!t||(t.since&&k<t.since))return -1;
+  return dayRec(k).done.includes(yTask)?4:0;
+}
+function renderYear(){
+  if($('yearPage').hidden)return;
+  const t=todayKey(), thisYear=new Date().getFullYear();
+  const firstData=Object.keys(days).sort()[0];
+  const minYear=Math.min(thisYear-1,firstData?+firstData.slice(0,4):thisYear);
+  if(viewYear>thisYear)viewYear=thisYear;
+  $('yLabel').textContent=viewYear;$('yNext').disabled=viewYear>=thisYear;$('yPrev').disabled=viewYear<=minYear;
+  // habit filter
+  const sel=$('ySel');if(yTask&&!tasks.some(x=>x.id===yTask))yTask='';
+  sel.textContent='';const o0=new Option('全部事项','');sel.append(o0);
+  for(const P of PERIODS)for(const x of tasks.filter(y=>y.period===P.k))sel.append(new Option(P.name+' · '+x.title,x.id));
+  sel.value=yTask;
+  // stats for the year (up to today)
+  let full=0,tracked=0,sum=0,best=0,run=0;
+  const end=String(viewYear)===t.slice(0,4)?t:viewYear+'-12-31';
+  for(let k=viewYear+'-01-01';k<=end;k=shift(k,1)){
+    const lv=dayLevel(k);
+    const has=yTask?lv>=0&&(days[k]||k===t):(days[k]&&days[k].total>0)||(k===t&&tasksOn(k).length>0);
+    if(has){tracked++;const r=yTask?(lv===4?1:0):ratio(k);sum+=r;if(r>=1){full++;run++;best=Math.max(best,run)}else run=0}else run=0;
+  }
+  $('yStats').innerHTML='<div><b></b><span>全勤天数</span></div><div><b></b><span>平均完成度</span></div><div><b></b><span>最长连续</span></div>';
+  const bs=$('yStats').querySelectorAll('b');bs[0].textContent=full;bs[1].textContent=tracked?Math.round(sum/tracked*100)+'%':'–';bs[2].textContent=best+' 天';
+  $('yStats').children[0].querySelector('span').textContent=yTask?'完成天数':'全勤天数';
+  // 12 month grids, Monday first
+  const M=$('months');M.textContent='';
+  for(let m=0;m<12;m++){
+    const box=document.createElement('div');box.className='mon';
+    const h=document.createElement('h3');h.textContent=(m+1)+' 月';const hs=document.createElement('span');h.append(hs);box.append(h);
+    const g=document.createElement('div');g.className='mgrid';
+    for(const w of ['一','二','三','四','五','六','日']){const s=document.createElement('span');s.className='wk';s.textContent=w;g.append(s)}
+    const first=new Date(viewYear,m,1), n=new Date(viewYear,m+1,0).getDate();
+    for(let i=0;i<(first.getDay()+6)%7;i++){const p=document.createElement('span');p.className='cell pad';g.append(p)}
+    let mf=0;
+    for(let d=1;d<=n;d++){
+      const k=viewYear+'-'+pad(m+1)+'-'+pad(d);
+      const b=document.createElement('button');b.type='button';b.textContent=d;
+      if(k>t){b.className='cell fut';b.disabled=true}
+      else{const lv=dayLevel(k);if(lv===4)mf++;
+        b.className='cell'+(lv>0?' l'+lv:'')+(k===t?' today':'');
+        b.setAttribute('aria-label',(m+1)+'月'+d+'日'+(lv<0?'，未开始':yTask?(lv===4?'，已完成':'，未完成'):'，完成 '+Math.round(ratio(k)*100)+'%'));
+        b.onclick=()=>{cur=k;back()}}
+      g.append(b)}
+    hs.textContent=mf?(yTask?'完成 ':'全勤 ')+mf+' 天':'';
+    box.append(g);M.append(box)}
+}
+$('yPrev').onclick=()=>{viewYear--;renderYear()};
+$('yNext').onclick=()=>{viewYear++;renderYear()};
+$('ySel').onchange=e=>{yTask=e.target.value;renderYear()};
 
 /* ---------- add sheet ---------- */
 let picked=null;
